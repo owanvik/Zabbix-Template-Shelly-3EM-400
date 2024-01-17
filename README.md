@@ -60,7 +60,3 @@ If you encounter any issues or have feedback, please [open an issue](https://git
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
-```
-
-Make sure to replace placeholders like `your-username` with your actual GitHub username. Also, customize the template based on specific details related to your project. This template provides a basic structure with sections like Overview, Features, Prerequisites, Installation, Usage, Contributing, Issues and Feedback, and License. You can add or modify sections according to your needs.
