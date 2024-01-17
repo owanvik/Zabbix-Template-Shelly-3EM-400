@@ -1,0 +1,1484 @@
+zabbix_export:
+  version: '6.4'
+  template_groups:
+    -
+      uuid: a086b5c471b648ed844efc1d04c2a66d
+      name: Templates/IOT
+  templates:
+    -
+      uuid: 3cf975e57bbb442ea6e06ff3edd9b8a8
+      template: Shelly-3EM-400
+      name: 'Shelly 3EM-400'
+      description: |
+        ## Overview
+        
+        Monitoring of almost all values the Shelly 3EM reports, except external sensors since I don't own one of those.
+        
+        
+        It has a fixed update time of 60s for all values, which might not be enough for some usecases - feel free to adjust it.
+        
+        
+        
+        ## Author
+        
+        Leonard Winck
+      groups:
+        -
+          name: Templates/IOT
+      items:
+        -
+          uuid: 4872afcdee294de4aa5b12b73f5d6cdd
+          name: Firmware
+          type: DEPENDENT
+          key: shelly3em.device.fw
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          inventory_link: SOFTWARE_FULL
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..fw_id
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.device.info
+          tags:
+            -
+              tag: Application
+              value: Software
+        -
+          uuid: 8d4344400aae49efb62d4289476bba06
+          name: 'Device Info gatherer'
+          type: HTTP_AGENT
+          key: shelly3em.device.info
+          delay: 24h
+          history: 30d
+          trends: '0'
+          value_type: TEXT
+          authtype: BASIC
+          username: admin
+          password: '{$SHELLYPWD}'
+          description: 'Collects Device info from Shelly'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.*'
+          url: 'http://{HOST.IP}/rpc/Shelly.GetDeviceInfo'
+          output_format: JSON
+          tags:
+            -
+              tag: Application
+              value: Gatherer
+        -
+          uuid: d93566b007ff49af88cc8cf9d345ccb8
+          name: Model
+          type: DEPENDENT
+          key: shelly3em.device.model
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          inventory_link: MODEL
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..model
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.device.info
+          tags:
+            -
+              tag: Application
+              value: Location
+        -
+          uuid: 5d070b2ac43642bf84dfa1ee9ef2db58
+          name: 'Ethernet IP Address'
+          type: DEPENDENT
+          key: shelly3em.eth.ip
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          inventory_link: HOST_NETWORKS
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..eth.ip
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: System
+        -
+          uuid: 5389dcd23d8043f090a6ef3291e767c4
+          name: 'Device location gatherer'
+          type: HTTP_AGENT
+          key: shelly3em.location
+          delay: 24h
+          history: 30d
+          trends: '0'
+          value_type: TEXT
+          authtype: BASIC
+          username: admin
+          password: '{$SHELLYPWD}'
+          description: 'Collects Device Location from Shelly'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$.*'
+          url: 'http://{HOST.IP}/rpc/Shelly.DetectLocation'
+          output_format: JSON
+          tags:
+            -
+              tag: Application
+              value: Gatherer
+        -
+          uuid: 6894f82f18ce46aaaa437ccec9c8094f
+          name: Latitude
+          type: DEPENDENT
+          key: shelly3em.location.lat
+          delay: '0'
+          value_type: FLOAT
+          inventory_link: LOCATION_LAT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..lat
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.location
+          tags:
+            -
+              tag: Application
+              value: Location
+        -
+          uuid: f590513b8bb443548868a7f25b0b4f90
+          name: Location
+          type: DEPENDENT
+          key: shelly3em.location.latlon
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          inventory_link: LOCATION
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$[''lat'', ''lon'']'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.location
+          tags:
+            -
+              tag: Application
+              value: Location
+        -
+          uuid: 91a7fc3a3e8643f1b3a1e79f805a6a33
+          name: Longitude
+          type: DEPENDENT
+          key: shelly3em.location.lon
+          delay: '0'
+          value_type: FLOAT
+          inventory_link: LOCATION_LON
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..lon
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.location
+          tags:
+            -
+              tag: Application
+              value: Location
+        -
+          uuid: b867178d77c946528d61ca6fc82b7b0d
+          name: 'Status gatherer'
+          type: HTTP_AGENT
+          key: shelly3em.status
+          history: 30d
+          trends: '0'
+          value_type: TEXT
+          authtype: BASIC
+          username: admin
+          password: '{$SHELLYPWD}'
+          description: 'This gatherer gathers all the data for the different items from the Rest-API Interface of the Shelly device.'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $.body
+          url: 'http://{HOST.IP}/rpc/shelly.getstatus'
+          output_format: JSON
+          tags:
+            -
+              tag: Application
+              value: Gatherer
+          triggers:
+            -
+              uuid: 2a3952cb0fd7428eb17dd43dd3396cc3
+              expression: 'nodata(/Shelly-3EM-400/shelly3em.status,180s)=1'
+              name: 'No data received for >3m'
+        -
+          uuid: bb906f2ac9c94f4d82d794f99bad47cd
+          name: 'Cloud Connection State'
+          type: DEPENDENT
+          key: shelly3em.status.cloud.connected
+          delay: '0'
+          valuemap:
+            name: 'Shelly Connection State'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..cloud.connected
+            -
+              type: TRIM
+              parameters:
+                - '[]'
+            -
+              type: JAVASCRIPT
+              parameters:
+                - |
+                  if (value == "false") {
+                  return 0 ;
+                  } else if (value == "true") {
+                  return 1 ;
+                  } else {
+                  return 2 ;
+                  }
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Cloud
+          triggers:
+            -
+              uuid: 17b3ddea147748f1b2c1869c46ae10eb
+              expression: change(/Shelly-3EM-400/shelly3em.status.cloud.connected)<>0
+              recovery_mode: NONE
+              name: 'Cloud connection state has changed'
+              priority: WARNING
+              type: MULTIPLE
+              manual_close: 'YES'
+        -
+          uuid: ced5be4fd9a4437aab7c2ac25a08294d
+          name: 'Shelly EM0'
+          type: DEPENDENT
+          key: shelly3em.status.em0
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"]'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 8f6e70cadf7d47639c8798fa91225b0b
+          name: 'Phase A Active Power'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.a_actpwr
+          delay: '0'
+          value_type: FLOAT
+          units: W
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].a_act_power'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: e02bdcff887b42f1a16ac0d38e6588b2
+          name: 'Phase A Apparent power'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.a_aprt_power
+          delay: '0'
+          value_type: FLOAT
+          units: VA
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].a_aprt_power'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: aae892d94e80491780754c6c53f75996
+          name: 'Phase A Current'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.a_current
+          delay: '0'
+          value_type: FLOAT
+          units: A
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].a_current'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 98a6a4fd2e7745f6b7474d576ec893d4
+          name: 'Phase A Frequency'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.a_freq
+          delay: '0'
+          value_type: FLOAT
+          units: Hz
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].a_freq'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: bb08e10e83734cc5a8f4efdd8ca84b22
+          name: 'Phase A Power factor'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.a_pf
+          delay: '0'
+          value_type: FLOAT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].a_pf'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 83dc351f5e104064985afa160ab5e37e
+          name: 'Phase A Voltage'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.a_voltage
+          delay: '0'
+          value_type: FLOAT
+          units: V
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].a_voltage'
+            -
+              type: TRIM
+              parameters:
+                - '[]'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 430c1712debe458998c5ac44b6fccaf5
+          name: 'Phase B Active Power'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.b_actpwr
+          delay: '0'
+          value_type: FLOAT
+          units: W
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].b_act_power'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 1b16c79af870497f8266e6b39ad8d40b
+          name: 'Phase B Apparent power'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.b_aprt_power
+          delay: '0'
+          value_type: FLOAT
+          units: VA
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].b_aprt_power'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 4745d91838dc49638f68c44becf3742e
+          name: 'Phase B Current'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.b_current
+          delay: '0'
+          value_type: FLOAT
+          units: A
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].b_current'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 9fa8da47f04e4be295858e82f14058b1
+          name: 'Phase B Frequency'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.b_freq
+          delay: '0'
+          value_type: FLOAT
+          units: Hz
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].b_freq'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 74ba5ddf05f34e28bf51e33f9df95d69
+          name: 'Phase B Power factor'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.b_pf
+          delay: '0'
+          value_type: FLOAT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].b_pf'
+            -
+              type: TRIM
+              parameters:
+                - '[]'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 806a0b9f4781472783a53eecd7fb8c6d
+          name: 'Phase B Voltage'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.b_voltage
+          delay: '0'
+          value_type: FLOAT
+          units: V
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].b_voltage'
+            -
+              type: TRIM
+              parameters:
+                - '[]'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: bdb71235ae324fb595f8bee27ecbd025
+          name: 'Phase C Active Power'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.c_actpwr
+          delay: '0'
+          value_type: FLOAT
+          units: W
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].c_act_power'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 2fd00c58e5ec451a95e957cce7e0d181
+          name: 'Phase C Apparent power'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.c_aprt_power
+          delay: '0'
+          value_type: FLOAT
+          units: VA
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].c_aprt_power'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: fee6f80203d2411f973dc475873ae221
+          name: 'Phase C Current'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.c_current
+          delay: '0'
+          value_type: FLOAT
+          units: A
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].c_current'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 4ab1cba081764aa0835ed6557c5dcb05
+          name: 'Phase C Frequency'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.c_freq
+          delay: '0'
+          value_type: FLOAT
+          units: Hz
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].c_freq'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 018209e2f63747e492372776965916fe
+          name: 'Phase C Power factor'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.c_pf
+          delay: '0'
+          value_type: FLOAT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].c_pf'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: a62d255e5a914baab6129d0c427cbba4
+          name: 'Phase C Voltage'
+          type: DEPENDENT
+          key: shelly3em.status.em0.phase.c_voltage
+          delay: '0'
+          value_type: FLOAT
+          units: V
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["em:0"].c_voltage'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 4d99e0f2cc9a4947804686458f543aed
+          name: 'Phase A Total Active Energy'
+          type: DEPENDENT
+          key: shelly3em.status.emdata0.phase.a_total_act_energy
+          delay: '0'
+          value_type: FLOAT
+          units: W
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["emdata:0"].a_total_act_energy'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 283c8ea93595499f9d85d44a530f57a8
+          name: 'Phase A Total Returned Energy'
+          type: DEPENDENT
+          key: shelly3em.status.emdata0.phase.a_total_ret_energy
+          delay: '0'
+          value_type: FLOAT
+          units: W
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["emdata:0"].a_total_act_ret_energy'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 5c9c3675a8484ff185f98e8b890ee29e
+          name: 'Phase B Total Active Energy'
+          type: DEPENDENT
+          key: shelly3em.status.emdata0.phase.b_total_act_energy
+          delay: '0'
+          value_type: FLOAT
+          units: W
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["emdata:0"].b_total_act_energy'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 94eddb706d714e5b8db8edfe64e3aa78
+          name: 'Phase B Total Returned Energy'
+          type: DEPENDENT
+          key: shelly3em.status.emdata0.phase.b_total_ret_energy
+          delay: '0'
+          value_type: FLOAT
+          units: W
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["emdata:0"].b_total_act_ret_energy'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 55c118a4867341b98426aed8f45a7284
+          name: 'Phase C Total Active Energy'
+          type: DEPENDENT
+          key: shelly3em.status.emdata0.phase.c_total_act_energy
+          delay: '0'
+          value_type: FLOAT
+          units: W
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["emdata:0"].c_total_act_energy'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: c04f15c5e8574ee1ba5357e9920e5ff8
+          name: 'Phase C Total Returned Energy'
+          type: DEPENDENT
+          key: shelly3em.status.emdata0.phase.c_total_ret_energy
+          delay: '0'
+          value_type: FLOAT
+          units: W
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["emdata:0"].c_total_act_ret_energy'
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Meters
+        -
+          uuid: 065c2395b79347d8a93284ec85e2fcff
+          name: 'Filesystem Free'
+          type: DEPENDENT
+          key: shelly3em.status.fs_free
+          delay: '0'
+          units: b
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..fs_free
+            -
+              type: TRIM
+              parameters:
+                - '[]'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: System
+        -
+          uuid: 31961bf452964570bd77e9c4d03abcf3
+          name: 'Filesystem Total'
+          type: DEPENDENT
+          key: shelly3em.status.fs_size
+          delay: '0'
+          units: b
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..fs_size
+            -
+              type: TRIM
+              parameters:
+                - '[]'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: System
+        -
+          uuid: 7f663550781a46338a0e2fef2bdbe78d
+          name: 'MAC Address'
+          type: DEPENDENT
+          key: shelly3em.status.mac
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          inventory_link: MACADDRESS_A
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..mac
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: System
+        -
+          uuid: b3a024a95d8a4406825f5fbd59b09d95
+          name: 'MQTT Connection State'
+          type: DEPENDENT
+          key: shelly3em.status.mqtt.connected
+          delay: '0'
+          valuemap:
+            name: 'Shelly Connection State'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..mqtt.connected
+            -
+              type: TRIM
+              parameters:
+                - '[]'
+            -
+              type: JAVASCRIPT
+              parameters:
+                - |
+                  if (value == "false") {
+                  return 0 ;
+                  } else if (value == "true") {
+                  return 1 ;
+                  } else {
+                  return 2 ;
+                  }
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: MQTT
+          triggers:
+            -
+              uuid: cf18e90e5c654a13b5339dc475980c63
+              expression: change(/Shelly-3EM-400/shelly3em.status.mqtt.connected)<>0
+              recovery_mode: NONE
+              name: 'MQTT connection state has changed'
+              priority: WARNING
+              type: MULTIPLE
+              manual_close: 'YES'
+        -
+          uuid: 63abdbf4851f4a2ebe7dde68ebd33312
+          name: 'Memory Free'
+          type: DEPENDENT
+          key: shelly3em.status.ram_free
+          delay: '0'
+          units: b
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..ram_free
+            -
+              type: TRIM
+              parameters:
+                - '[]'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: System
+        -
+          uuid: b2c9e58ed6da479b9e689ae9483f7bd6
+          name: 'Memory Total'
+          type: DEPENDENT
+          key: shelly3em.status.ram_total
+          delay: '0'
+          units: b
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..ram_size
+            -
+              type: TRIM
+              parameters:
+                - '[]'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: System
+        -
+          uuid: 34ed948c605d4589857af91a6b2c8475
+          name: 'Current Time'
+          type: DEPENDENT
+          key: shelly3em.status.time
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..sys.time
+            -
+              type: TRIM
+              parameters:
+                - '[]'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: System
+        -
+          uuid: 127ac98da8fe4646b326589faffeea82
+          name: 'Current Temperature'
+          type: DEPENDENT
+          key: shelly3em.status.tmp.tC
+          delay: '0'
+          value_type: FLOAT
+          units: °C
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - '$..["temperature:0"].tC'
+            -
+              type: TRIM
+              parameters:
+                - '[]'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Temperature
+        -
+          uuid: c23dde3d91b44428ac59aa59e48a520b
+          name: 'Current Unixtime'
+          type: DEPENDENT
+          key: shelly3em.status.unixtime
+          delay: '0'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..unixtime
+            -
+              type: TRIM
+              parameters:
+                - '[]'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: System
+          triggers:
+            -
+              uuid: 7d419e48c2de48958efbe2fd3d953b66
+              expression: 'fuzzytime(/Shelly-3EM-400/shelly3em.status.unixtime,60s)=0'
+              name: 'Time is out of sync'
+              priority: WARNING
+        -
+          uuid: fc6504d872114e66baf0dda0592adda5
+          name: 'Update Availability'
+          type: DEPENDENT
+          key: shelly3em.status.update.has_update
+          delay: '0'
+          valuemap:
+            name: 'Shelly Update Availability'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..update.has_update
+            -
+              type: TRIM
+              parameters:
+                - '[]'
+            -
+              type: JAVASCRIPT
+              parameters:
+                - |
+                  if (value == "false") {
+                  return 0 ;
+                  } else if (value == "true") {
+                  return 1 ;
+                  } else {
+                  return 2 ;
+                  }
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Update
+          triggers:
+            -
+              uuid: 34c300d28011459f9dc245503172abfd
+              expression: last(/Shelly-3EM-400/shelly3em.status.update.has_update)=1
+              name: 'Update available'
+              priority: INFO
+        -
+          uuid: f68b00e0e4f943fab0b6ac0e3306ef5b
+          name: 'New Version Available'
+          type: DEPENDENT
+          key: shelly3em.status.update.new_version
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..update.new_version
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Update
+        -
+          uuid: 1e8ee259d9404ae081ea8e6cdc3ae2d9
+          name: 'Current Version'
+          type: DEPENDENT
+          key: shelly3em.status.update.old_version
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..update.old_version
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Update
+          triggers:
+            -
+              uuid: a208cfa3dce844a69a307255f631b858
+              expression: change(/Shelly-3EM-400/shelly3em.status.update.old_version)<>0
+              recovery_mode: NONE
+              name: 'Version has changed'
+              priority: WARNING
+              type: MULTIPLE
+              manual_close: 'YES'
+        -
+          uuid: 3379f188c1d6495c82c3c36f623781a6
+          name: 'Update Status'
+          type: DEPENDENT
+          key: shelly3em.status.update.status
+          delay: '0'
+          valuemap:
+            name: 'Shelly Update Status'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..update.status
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+            -
+              type: JAVASCRIPT
+              parameters:
+                - |
+                  if (value == "idle") {
+                  return 0 ;
+                  } else if (value == "pending") {
+                  return 1 ;
+                  } else if (value == "updating") {
+                  return 2 ;
+                  } else {
+                  return 3 ;
+                  }
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: Update
+        -
+          uuid: 71a99f1ce89f42c1969da61844848359
+          name: Uptime
+          type: DEPENDENT
+          key: shelly3em.status.uptime
+          delay: '0'
+          units: s
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..uptime
+            -
+              type: TRIM
+              parameters:
+                - '[]'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: System
+          triggers:
+            -
+              uuid: da748ae26de349df9efb520e7c130bfa
+              expression: last(/Shelly-3EM-400/shelly3em.status.uptime)<600
+              name: 'Device has been restarted (Uptime <10m)'
+              priority: WARNING
+        -
+          uuid: efdf60d598da45f9b65572ba687cfd10
+          name: 'WiFi RSSI'
+          type: DEPENDENT
+          key: shelly3em.status.wifi.rssi
+          delay: '0'
+          value_type: FLOAT
+          valuemap:
+            name: 'Shelly Connection State'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..wifi.rssi
+            -
+              type: TRIM
+              parameters:
+                - '[]'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: WiFi
+        -
+          uuid: 414f38191e014ffb98ee76144a27dc95
+          name: 'WiFi SSID'
+          type: DEPENDENT
+          key: shelly3em.status.wifi.ssid
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..wifi.ssid
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: WiFi
+        -
+          uuid: bb33d72907864c509020827530142f61
+          name: 'WiFi Connection State'
+          type: DEPENDENT
+          key: shelly3em.status.wifi.status
+          delay: '0'
+          valuemap:
+            name: 'Shelly Connection State'
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..wifi.status
+            -
+              type: TRIM
+              parameters:
+                - '[]'
+            -
+              type: JAVASCRIPT
+              parameters:
+                - |
+                  if (value == "disconnected") {
+                  return 0 ;
+                  } else if (value == "connected") {
+                  return 1 ;
+                  } else {
+                  return 2 ;
+                  }
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: WiFi
+        -
+          uuid: 5c12d7fb41234aeaa84fb66d17063f42
+          name: 'WiFi IP'
+          type: DEPENDENT
+          key: shelly3em.status.wifi.sta_ip
+          delay: '0'
+          trends: '0'
+          value_type: TEXT
+          preprocessing:
+            -
+              type: JSONPATH
+              parameters:
+                - $..wifi.sta_ip
+            -
+              type: TRIM
+              parameters:
+                - '[]"'
+          master_item:
+            key: shelly3em.status
+          tags:
+            -
+              tag: Application
+              value: WiFi
+      macros:
+        -
+          macro: '{$SHELLYPWD}'
+          description: 'Password for admin user, if present'
+      valuemaps:
+        -
+          uuid: bd3de97e52b94a048bd41751c6fa11c7
+          name: 'Shelly Connection State'
+          mappings:
+            -
+              value: '0'
+              newvalue: Disconnected
+            -
+              value: '1'
+              newvalue: Connected
+            -
+              value: '2'
+              newvalue: Unknown
+        -
+          uuid: 5c7b889412b648f9b72815cd3095af24
+          name: 'Shelly Enabled State'
+          mappings:
+            -
+              value: '0'
+              newvalue: Disabled
+            -
+              value: '1'
+              newvalue: Enabled
+            -
+              value: '2'
+              newvalue: Unknown
+        -
+          uuid: 681bd99db9364614a7781644bc0f70c5
+          name: 'Shelly Input Event'
+          mappings:
+            -
+              value: '0'
+              newvalue: Shortpush
+            -
+              value: '1'
+              newvalue: Longpush
+            -
+              value: '2'
+              newvalue: none/invalid
+        -
+          uuid: 7053a97f500b407d930b3728d49954c8
+          name: 'Shelly On/Off State'
+          mappings:
+            -
+              value: '0'
+              newvalue: 'Off'
+            -
+              value: '1'
+              newvalue: 'On'
+            -
+              value: '2'
+              newvalue: Unknown
+        -
+          uuid: c9e62a087db34e73ac1d267e38b81de2
+          name: 'Shelly Status'
+          mappings:
+            -
+              value: '0'
+              newvalue: Ok
+            -
+              value: '1'
+              newvalue: Critical
+            -
+              value: '2'
+              newvalue: Unknown
+        -
+          uuid: a85dd8e760e147e7a0be987f0d1601f8
+          name: 'Shelly Temperature Status'
+          mappings:
+            -
+              value: '0'
+              newvalue: Normal
+            -
+              value: '1'
+              newvalue: High
+            -
+              value: '2'
+              newvalue: 'Very High'
+            -
+              value: '3'
+              newvalue: Unknown
+        -
+          uuid: 214403a5ff5544c3a6cfd828f1462c72
+          name: 'Shelly Update Availability'
+          mappings:
+            -
+              value: '0'
+              newvalue: 'No Update Available'
+            -
+              value: '1'
+              newvalue: 'Update Available'
+            -
+              value: '2'
+              newvalue: Unknown
+        -
+          uuid: 055190bd90ae4e9094966224879228e3
+          name: 'Shelly Update Status'
+          mappings:
+            -
+              value: '0'
+              newvalue: Idle
+            -
+              value: '1'
+              newvalue: Pending
+            -
+              value: '2'
+              newvalue: Updating
+            -
+              value: '3'
+              newvalue: Unknown
+  triggers:
+    -
+      uuid: 399039775046439aa88cefe71048e5d3
+      expression: 'last(/Shelly-3EM-400/shelly3em.status.fs_free)>=last(/Shelly-3EM-400/shelly3em.status.fs_size)*0.8 and last(/Shelly-3EM-400/shelly3em.status.fs_free)<last(/Shelly-3EM-400/shelly3em.status.fs_size)*0.9'
+      name: 'Filesystem usage >=80%'
+      priority: WARNING
+    -
+      uuid: ed194d9f3a604b78aa68cdbd6481f6a2
+      expression: 'last(/Shelly-3EM-400/shelly3em.status.fs_free)>=last(/Shelly-3EM-400/shelly3em.status.fs_size)*0.9'
+      name: 'Filesystem usage >=90%'
+      priority: AVERAGE
+    -
+      uuid: 437f54f76d8e42deaa2841b5ddfc37be
+      expression: 'last(/Shelly-3EM-400/shelly3em.status.ram_free)>=last(/Shelly-3EM-400/shelly3em.status.ram_total)*0.8 and last(/Shelly-3EM-400/shelly3em.status.ram_free)<last(/Shelly-3EM-400/shelly3em.status.ram_total)*0.9'
+      name: 'Memory usage >=80%'
+      priority: WARNING
+    -
+      uuid: 1a09e9035e0345a7a241400a96f417f8
+      expression: 'last(/Shelly-3EM-400/shelly3em.status.ram_free)>=last(/Shelly-3EM-400/shelly3em.status.ram_total)*0.9'
+      name: 'Memory usage >=90%'
+      priority: AVERAGE
