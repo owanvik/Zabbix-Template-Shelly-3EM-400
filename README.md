@@ -29,7 +29,7 @@ This is a Zabbix Template for monitoring Shelly 3EM-400 smart energy meters. It 
 
    - Log in to the Zabbix web interface.
    - Navigate to "Configuration" > "Templates."
-   - Click on "Import" and select the `template_shelly_3em_400.xml` file from the repository.
+   - Click on "Import" and select the `template_shelly_3em_400.yaml` file from the repository.
 
 3. Configure the Shelly 3EM-400 devices in Zabbix.
 
