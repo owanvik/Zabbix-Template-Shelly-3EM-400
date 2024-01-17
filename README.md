@@ -1,6 +1,3 @@
-Certainly! Writing a README file is crucial for providing documentation and usage instructions for your GitHub repository. Here's a template you can use for your Zabbix Template for Shelly 3EM-400:
-
-
 # Zabbix Template for Shelly 3EM-400
 
 ## Overview
