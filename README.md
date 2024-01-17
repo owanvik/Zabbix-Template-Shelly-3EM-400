@@ -15,7 +15,7 @@ This is a Zabbix Template for monitoring Shelly 3EM-400 smart energy meters. It 
 
 ## Prerequisites
 
-- Zabbix Server (version X.X or later)
+- Zabbix Server (version 6.0 or later)
 - Shelly 3EM-400 devices (firmware version X.X or later)
 
 ## Installation
